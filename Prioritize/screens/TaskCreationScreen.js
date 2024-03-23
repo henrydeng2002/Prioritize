@@ -77,7 +77,7 @@ export default function TaskCreationScreen({ navigation }) {
         }
     }
 
-    const createEvent = () => {
+    const createEvent = async () => {
         //if ()
         var dateString = date.toISOString();
 
@@ -86,7 +86,7 @@ export default function TaskCreationScreen({ navigation }) {
         } else if (date < new Date()) {
             createAlert('Please enter a date after current time');
         } else {
-            AWSHelper.createTask({dateTime: dateString, category: value, title: name, description: description, time: time});
+            await AWSHelper.createTask({dateTime: dateString, category: value, title: name, description: description, time: time});
             navigation.navigate("Task Overview");
         }
     }

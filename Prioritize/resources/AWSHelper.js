@@ -290,16 +290,40 @@ const AWSHelper = {
                     'eventID': taskIDs[i]
                 }
             }))
+
+            var timeNeededString = "";
+            var hr = parseInt(response.Item.timeNeeded) - (parseInt(response.Item.timeNeeded) % 4)
+            var min = (parseInt(response.Item.timeNeeded) % 4) * 15
+            timeNeededString += hr + " hrs " + min + " mins";
+
+            var dateTimeString = new Date(response.Item.dateTime).toString();
+
             var task = {
                 category: response.Item.category,
-                dateTime: response.Item.datetime,
+                dateTime: response.Item.dateTime,
                 description: response.Item.description,
                 timeNeeded: response.Item.timeNeeded,
-                title: response.Item.title
+                timeNeededString: timeNeededString,
+                title: response.Item.title,
+                dateTimeString: dateTimeString
             }
             tasks.push(task)
         }
+
+        tasks.sort(compareDate);
         return tasks;
+    }
+}
+
+function compareDate(a, b) {
+    var x = new Date(a.dateTime);
+    var y = new Date(b.dateTime);
+    if (x < y) {
+        return -1;
+    } else if (x > y) {
+        return 1;
+    } else {
+        return 0;
     }
 }
 

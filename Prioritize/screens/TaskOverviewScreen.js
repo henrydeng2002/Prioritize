@@ -6,7 +6,8 @@ import React, {useState, useEffect} from 'react';
 
 export default function TaskOverviewScreen({route, navigation}) {
     const [tasks, setTasks] = useState([]);
-    const onTaskSelect = () => {
+    const onTaskSelect = (task) => {
+        console.log(task)
         navigation.navigate("Task Detail");
     } 
 
@@ -40,17 +41,21 @@ export default function TaskOverviewScreen({route, navigation}) {
                 </Card>
             </Pressable>
 
-            <Text style={styles.status}>{tasks.length > 0 ? "" : "You currently have no tasks!"}</Text>
+            <Text style={styles.status}>{tasks.length > 0 ? "Your Tasks:" : "You currently have no tasks!"}</Text>
 
             {tasks.map((task) => {
                 return (
-                    <Pressable onPress={onTaskSelect} key={task.eventID}>
-                        <Card>
-                            <Card.Title>
+                    <Pressable onPress={() => {onTaskSelect(task)}} key={task.eventID}>
+                        <Card key={task.dateTime}>
+                            <Card.Title key={task.title}>
                                 {task.title}
                             </Card.Title>
+                            <Text>Time needed:</Text>
+                            <Text key={task.timeNeededString}>{task.timeNeededString}</Text>
+                            <Text>Date due:</Text>
+                            <Text>{task.dateTimeString}</Text>
                             <Text>
-                                {(task.description != "") ? task.description : ""}
+                                {(task.description != "") ? "Description: " + task.description : ""}
                             </Text>
                         </Card>
                     </Pressable>
@@ -65,6 +70,8 @@ export default function TaskOverviewScreen({route, navigation}) {
 
 const styles = StyleSheet.create({
     status: {
-        alignSelf: 'center'
+        margin: 10,
+        alignSelf: 'center',
+        fontWeight: 'bold'
     }
 })
