@@ -138,6 +138,7 @@ export default function TaskCreationScreen({ navigation }) {
                         is24Hour={true}
                         onChange={onChange}
                         style={styles.picker}
+                        minuteInterval={15}
                     />
                 )}
                 <Text>Date & Time selected: {date.toLocaleString()}</Text>

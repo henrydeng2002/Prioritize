@@ -7,8 +7,7 @@ import React, {useState, useEffect} from 'react';
 export default function TaskOverviewScreen({route, navigation}) {
     const [tasks, setTasks] = useState([]);
     const onTaskSelect = (task) => {
-        console.log(task)
-        navigation.navigate("Task Detail");
+        navigation.navigate("Task Detail", {task: task});
     } 
 
     const createTaskHandler = () => {

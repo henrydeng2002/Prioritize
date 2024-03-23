@@ -1,48 +1,26 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Text, Button, Platform } from 'react-native';
-import * as Calendar from 'expo-calendar';
+import { Card } from '@rneui/themed';
+import { View, Text, Button, Pressable, ScrollView, StyleSheet } from 'react-native';
 
-export default function CalendarScreen() {
+export default function CalendarScreen({navigation}) {
     useEffect(() => {
-        (async () => {
-            const { status } = await Calendar.requestCalendarPermissionsAsync();
-            if (status === 'granted') {
-                const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-                console.log('Here are all your calendars:');
-                console.log({ calendars });
-            }
-        })();
     }, []);
 
+    const createTimeHandler = () => {
+        navigation.navigate("Enter a Time Slot");
+    }
+
     return (
-        <View style={styles.container}>
-            <Text>Calendar Module Example</Text>
-            <Button title="Create a new calendar" onPress={createCalendar} />
-        </View>
+        <ScrollView>
+            <Pressable onPress={createTimeHandler}>
+                <Card>
+                    <Card.Title>
+                        Enter a new time slot
+                    </Card.Title>
+                </Card>
+            </Pressable>
+        </ScrollView>
     );
-}
-
-async function getDefaultCalendarSource() {
-    const defaultCalendar = await Calendar.getDefaultCalendarAsync();
-    return defaultCalendar.source;
-}
-
-async function createCalendar() {
-    const defaultCalendarSource =
-        Platform.OS === 'ios'
-            ? await getDefaultCalendarSource()
-            : { isLocalAccount: true, name: 'Expo Calendar' };
-    const newCalendarID = await Calendar.createCalendarAsync({
-        title: 'Expo Calendar',
-        color: 'blue',
-        entityType: Calendar.EntityTypes.EVENT,
-        sourceId: defaultCalendarSource.id,
-        source: defaultCalendarSource,
-        name: 'internalCalendarName',
-        ownerAccount: 'personal',
-        accessLevel: Calendar.CalendarAccessLevel.OWNER,
-    });
-    console.log(`Your new calendar ID is: ${newCalendarID}`);
 }
 
 const styles = StyleSheet.create({

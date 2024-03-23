@@ -13,6 +13,7 @@ import TaskDetailScreen from './screens/TaskDetailScreen';
 import TaskCreationScreen from './screens/TaskCreationScreen';
 
 import React from "react";
+import CreateTime from './screens/CreateTime';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -83,6 +84,10 @@ function Calendar() {
           headerShown: false,
           headerLeft: () => <></>,
         }}
+      />
+      <Stack.Screen
+        name = "Enter a Time Slot"
+        component={CreateTime}
       />
     </Stack.Navigator>
   )

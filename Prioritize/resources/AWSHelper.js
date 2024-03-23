@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { CognitoIdentityClient, GetCredentialsForIdentityCommand, GetIdCommand } from "@aws-sdk/client-cognito-identity";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { PutCommand, DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
 import { ReadableStream } from 'web-streams-polyfill';
@@ -88,7 +88,7 @@ const AWSHelper = {
     // returns true if signin is successful
     // TODO: update error handling
     signIn: async function ({ username, password }) {
-        const client = new CognitoIdentityProviderClient({region: options.cognitoRegion});
+        const client = new CognitoIdentityProviderClient({ region: options.cognitoRegion });
 
         // initiates an auth command to the cognito identity provider client
         // uses the user provided username and password
@@ -103,7 +103,7 @@ const AWSHelper = {
         // gets response and stores the tokens locally
         var response = await client.send(command).catch(
             (error) => { console.log(error); return false; }
-            );
+        );
         tokens.AccessToken = response.AuthenticationResult.AccessToken;
         tokens.IdToken = response.AuthenticationResult.IdToken;
         tokens.RefreshToken = response.AuthenticationResult.RefreshToken;
@@ -111,10 +111,10 @@ const AWSHelper = {
         const getUserCommand = new GetUserCommand({
             AccessToken: tokens.AccessToken
         })
-        
+
 
         var userInfo = await client.send(getUserCommand).catch(
-            (error) => {console.log(error); return false;}
+            (error) => { console.log(error); return false; }
         );
 
         var attributes = userInfo.UserAttributes;
@@ -124,7 +124,7 @@ const AWSHelper = {
             }
         }
 
-        const client2 = new CognitoIdentityClient({region: options.cognitoRegion});
+        const client2 = new CognitoIdentityClient({ region: options.cognitoRegion });
         // gets identityID of the user from the identity pool and stores it locally
         const idcommand = new GetIdCommand({
             IdentityPoolId: 'us-east-2:30fbd1c1-10d5-4a22-bd12-33a47ecc92b4',
@@ -134,7 +134,7 @@ const AWSHelper = {
         });
         var response2 = await client2.send(idcommand).catch(
             (error) => { console.log(error); return false; }
-            );
+        );
         // console.log(response2);
 
         // gets the access keys from the identity pool using the identity id
@@ -146,7 +146,7 @@ const AWSHelper = {
         });
         var response3 = await client2.send(idcommand2).catch(
             (error) => { console.log(error); return false; }
-            );
+        );
         // stores response locally
         credentials.accessKeyId = response3.Credentials.AccessKeyId;
         credentials.secretAccessKey = response3.Credentials.SecretKey;
@@ -177,19 +177,19 @@ const AWSHelper = {
         } else {
             taskCategories = cats.Item.categories;
         }
-        
+
         // return success
         return true;
     },
 
-    createCategory: async function(category) {
+    createCategory: async function (category) {
         const dynamoDBClient = new DynamoDBClient({
             region: options.dynamoDBRegion,
             credentials: credentials
         })
         const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
 
-        
+
 
         if (!taskCategories.includes(category)) {
             taskCategories.push(category)
@@ -201,22 +201,22 @@ const AWSHelper = {
                         'categories': taskCategories,
                     }
                 })
-            ).catch((error)  => {console.log(error); return false;});
+            ).catch((error) => { console.log(error); return false; });
         }
     },
 
-    createTask: async function ({dateTime, category, title, description, time}) {
+    createTask: async function ({ dateTime, category, title, description, time }) {
         const dynamoDBClient = new DynamoDBClient({
             region: options.dynamoDBRegion,
             credentials: credentials
         })
         const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
 
-        var eventID = ""+title+dateTime;
+        var eventID = "" + title + Date().toString();
+        console.log(eventID);
         var timeNeeded = 0;
-        timeNeeded += (parseInt(time.hours)*4)
+        timeNeeded += (parseInt(time.hours) * 4)
         timeNeeded += (parseInt(time.minutes) / 15)
-        console.log(timeNeeded)
         await docClient.send(new PutCommand({
             TableName: 'tasks',
             Item: {
@@ -228,7 +228,7 @@ const AWSHelper = {
                 'description': description,
                 'timeNeeded': timeNeeded
             }
-        })).catch((error)  => {console.log(error); return false;});
+        })).catch((error) => { console.log(error); return false; });
 
         var currUserTasks = await docClient.send(new GetCommand({
             TableName: 'userTasks',
@@ -251,7 +251,7 @@ const AWSHelper = {
                 'userID': userAttributes.sub,
                 'taskIDs': tasks
             }
-        })).catch((error)  => {console.log(error); return false;});
+        })).catch((error) => { console.log(error); return false; });
     },
 
     getTaskCategories: function () {
@@ -292,13 +292,14 @@ const AWSHelper = {
             }))
 
             var timeNeededString = "";
-            var hr = parseInt(response.Item.timeNeeded) - (parseInt(response.Item.timeNeeded) % 4)
+            var hr = (parseInt(response.Item.timeNeeded) - (parseInt(response.Item.timeNeeded) % 4)) / 4
             var min = (parseInt(response.Item.timeNeeded) % 4) * 15
             timeNeededString += hr + " hrs " + min + " mins";
 
             var dateTimeString = new Date(response.Item.dateTime).toString();
 
             var task = {
+                eventID: response.Item.eventID,
                 category: response.Item.category,
                 dateTime: response.Item.dateTime,
                 description: response.Item.description,
@@ -312,6 +313,48 @@ const AWSHelper = {
 
         tasks.sort(compareDate);
         return tasks;
+    },
+
+    updateDue: async function (eventID, due) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+        await docClient.send(new UpdateCommand({
+            TableName: "tasks",
+            Key: {
+                'userID': userAttributes.sub,
+                'eventID': eventID,
+            },
+            UpdateExpression: "set dateTime = :dateTime",
+            ExpressionAttributeValues: {
+                ":dateTime": due,
+            },
+        }))
+    },
+
+    updateTimeNeeded: async function (eventID, time) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+        var timeNeeded = 0;
+        timeNeeded += (parseInt(time.hours) * 4)
+        timeNeeded += (parseInt(time.minutes) / 15)
+        console.log(eventID);
+        await docClient.send(new UpdateCommand({
+            TableName: "tasks",
+            Key: {
+                'userID': userAttributes.sub,
+                'eventID': eventID,
+            },
+            UpdateExpression: "set timeNeeded = :timeNeeded",
+            ExpressionAttributeValues: {
+                ":timeNeeded": timeNeeded,
+            },
+        }))
     }
 }
 
