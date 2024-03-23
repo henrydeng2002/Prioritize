@@ -23,7 +23,7 @@ const LoginScreen = ({navigation}) => {
     }
 
     const onRegisterRequest = () => {
-        navigation.navigate("RegisterScreen");
+        navigation.navigate("Register");
     }
 
     return (

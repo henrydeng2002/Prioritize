@@ -18,7 +18,7 @@ const RegisterScreen = ({navigation}) => {
             return;
         } else {
             if (await AWSHelper.signUp({username, email, password})) {
-                navigation.navigate("EmailConfirmation", {username: username});
+                navigation.navigate("Confirm Email", {username: username});
             } else {
                 setErrorMessage("Error registering user, please check data fields");
             }

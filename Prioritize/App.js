@@ -20,9 +20,11 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{
+        headerShown: false
+      }}>
         <Stack.Screen
-          name="LoginScreen"
+          name="Login"
           component={LoginScreen}
           options={{
             gestureEnabled: false,
@@ -31,7 +33,7 @@ export default function App() {
           }}
         /> 
         <Stack.Screen
-          name="EmailConfirmation"
+          name="Confirm Email"
           component={EmailConfirmation}
           options={{
             gestureEnabled: false,
@@ -40,7 +42,7 @@ export default function App() {
           }}
         /> 
         <Stack.Screen
-          name="RegisterScreen"
+          name="Register"
           component={RegisterScreen}
           options={{
             gestureEnabled: false,
@@ -53,7 +55,7 @@ export default function App() {
           component={MainScreen}
           options={{
             gestureEnabled: false,
-            headerShown: true,
+            headerShown: false,
             headerLeft: () => <></>,
           }}
         />
@@ -78,7 +80,7 @@ function Calendar() {
         component={CalendarScreen}
         options={{
           gestureEnabled: false,
-          headerShown: true,
+          headerShown: false,
           headerLeft: () => <></>,
         }}
       />
@@ -94,18 +96,17 @@ function Task() {
         component={TaskOverviewScreen}
         options={{
           gestureEnabled: false,
-          headerShown: true,
+          headerShown: false,
           headerLeft: () => <></>,
         }}
       />
       <Stack.Screen
         name="Task Detail"
         component={TaskDetailScreen}
-        // options={{
-        //   gestureEnabled: false,
-        //   headerShown: true,
-        //   headerLeft: () => <></>,
-        // }}
+        options={{
+          //gestureEnabled: false,
+          headerShown: true,
+        }}
       />
       <Stack.Screen
         name="Create a Task"

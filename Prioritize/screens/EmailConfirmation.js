@@ -11,7 +11,7 @@ const EmailConfirmation = ({route, navigation}) => {
     // email confirmation request
     const onEmailConfirmationRequest = () => {
         if (AWSHelper.confirmSignUp({ username, code})) {
-            navigation.navigate("LoginScreen");
+            navigation.navigate("Login");
         } else {
             setErrorMessage("Error confirming user, please check code");
         }

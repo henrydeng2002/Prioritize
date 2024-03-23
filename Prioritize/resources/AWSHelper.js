@@ -4,7 +4,8 @@ import {
     CognitoIdentityProviderClient,
     ConfirmSignUpCommand,
     InitiateAuthCommand,
-    AuthFlowType
+    AuthFlowType,
+    GetUserCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import { CognitoIdentityClient, GetCredentialsForIdentityCommand, GetIdCommand } from "@aws-sdk/client-cognito-identity";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -36,6 +37,12 @@ var tokens = {
     RefreshToken: ''
 }
 
+var userAttributes = {
+    sub: ''
+}
+
+var taskCategories = []
+
 // TODO: write signout function
 // https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
 const AWSHelper = {
@@ -57,6 +64,7 @@ const AWSHelper = {
         var response = await client.send(command).catch(
             (error) => { console.log(error); return false; }
         );
+
         return true;
     },
 
@@ -100,7 +108,21 @@ const AWSHelper = {
         tokens.IdToken = response.AuthenticationResult.IdToken;
         tokens.RefreshToken = response.AuthenticationResult.RefreshToken;
 
-        console.log(tokens);
+        const getUserCommand = new GetUserCommand({
+            AccessToken: tokens.AccessToken
+        })
+        
+
+        var userInfo = await client.send(getUserCommand).catch(
+            (error) => {console.log(error); return false;}
+        );
+
+        var attributes = userInfo.UserAttributes;
+        for (var i = 0; i < attributes.length; i++) {
+            if (attributes[i].Name === "sub") {
+                userAttributes.sub = attributes[i].Value;
+            }
+        }
 
         const client2 = new CognitoIdentityClient({region: options.cognitoRegion});
         // gets identityID of the user from the identity pool and stores it locally
@@ -126,15 +148,158 @@ const AWSHelper = {
             (error) => { console.log(error); return false; }
             );
         // stores response locally
-        // is this a good idea? probably not
-        // does it work? yes
-        // will i change it? maybe later
         credentials.accessKeyId = response3.Credentials.AccessKeyId;
         credentials.secretAccessKey = response3.Credentials.SecretKey;
         credentials.sessionToken = response3.Credentials.SessionToken;
+
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var cats = await docClient.send(new GetCommand({
+            TableName: 'taskCategories',
+            Key: {
+                'userID': userAttributes.sub
+            }
+        })).catch((error) => { console.log(error); return false; });
+
+        if (cats.Item == undefined) {
+            taskCategories = ["Home", "Work"];
+            await docClient.send(new PutCommand({
+                TableName: 'taskCategories',
+                Item: {
+                    'userID': userAttributes.sub,
+                    'categories': taskCategories
+                }
+            }))
+        } else {
+            taskCategories = cats.Item.categories;
+        }
         
         // return success
         return true;
+    },
+
+    createCategory: async function(category) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        
+
+        if (!taskCategories.includes(category)) {
+            taskCategories.push(category)
+            await docClient.send(
+                new PutCommand({
+                    TableName: 'taskCategories',
+                    Item: {
+                        'userID': userAttributes.sub,
+                        'categories': taskCategories,
+                    }
+                })
+            ).catch((error)  => {console.log(error); return false;});
+        }
+    },
+
+    createTask: async function ({dateTime, category, title, description, time}) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var eventID = ""+title+dateTime;
+        var timeNeeded = 0;
+        timeNeeded += (parseInt(time.hours)*4)
+        timeNeeded += (parseInt(time.minutes) / 15)
+        console.log(timeNeeded)
+        await docClient.send(new PutCommand({
+            TableName: 'tasks',
+            Item: {
+                'userID': userAttributes.sub,
+                'eventID': eventID,
+                'dateTime': dateTime,
+                'category': category,
+                'title': title,
+                'description': description,
+                'timeNeeded': timeNeeded
+            }
+        })).catch((error)  => {console.log(error); return false;});
+
+        var currUserTasks = await docClient.send(new GetCommand({
+            TableName: 'userTasks',
+            Key: {
+                'userID': userAttributes.sub
+            }
+        }))
+
+        var tasks = []
+        if (currUserTasks.Item != null) {
+            tasks = currUserTasks.Item.taskIDs;
+            tasks.push(eventID);
+        } else {
+            tasks = [eventID];
+        }
+
+        await docClient.send(new PutCommand({
+            TableName: 'userTasks',
+            Item: {
+                'userID': userAttributes.sub,
+                'taskIDs': tasks
+            }
+        })).catch((error)  => {console.log(error); return false;});
+    },
+
+    getTaskCategories: function () {
+        return taskCategories;
+    },
+
+    getTasks: async function () {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var tasks = await docClient.send(new GetCommand({
+            TableName: 'userTasks',
+            Key: {
+                'userID': userAttributes.sub
+            }
+        }))
+
+        var taskIDs = []
+        if (tasks.Item != null) {
+            taskIDs = tasks.Item.taskIDs;
+        } else {
+            return null;
+        }
+
+        console.log(taskIDs);
+
+        var tasks = [];
+        for (var i = 0; i < taskIDs.length; i++) {
+            var response = await docClient.send(new GetCommand({
+                TableName: 'tasks',
+                Key: {
+                    'userID': userAttributes.sub,
+                    'eventID': taskIDs[i]
+                }
+            }))
+            var task = {
+                category: response.Item.category,
+                dateTime: response.Item.datetime,
+                description: response.Item.description,
+                timeNeeded: response.Item.timeNeeded,
+                title: response.Item.title
+            }
+            tasks.push(task)
+        }
+        return tasks;
     }
 }
 
