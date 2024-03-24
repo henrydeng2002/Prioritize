@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { CognitoIdentityClient, GetCredentialsForIdentityCommand, GetIdCommand } from "@aws-sdk/client-cognito-identity";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { PutCommand, DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, DynamoDBDocumentClient, GetCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
 import { ReadableStream } from 'web-streams-polyfill';
@@ -279,8 +279,6 @@ const AWSHelper = {
             return null;
         }
 
-        console.log(taskIDs);
-
         var tasks = [];
         for (var i = 0; i < taskIDs.length; i++) {
             var response = await docClient.send(new GetCommand({
@@ -343,7 +341,6 @@ const AWSHelper = {
         var timeNeeded = 0;
         timeNeeded += (parseInt(time.hours) * 4)
         timeNeeded += (parseInt(time.minutes) / 15)
-        console.log(eventID);
         await docClient.send(new UpdateCommand({
             TableName: "tasks",
             Key: {
@@ -355,6 +352,44 @@ const AWSHelper = {
                 ":timeNeeded": timeNeeded,
             },
         }))
+    },
+
+    removeEvent: async function(eventID) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        docClient.send(new DeleteCommand({
+            TableName: "tasks",
+            Key: {
+                'userID': userAttributes.sub,
+                'eventID': eventID,
+            }
+        }))
+
+        var currUserTasks = await docClient.send(new GetCommand({
+            TableName: 'userTasks',
+            Key: {
+                'userID': userAttributes.sub
+            }
+        }))
+
+        var tasks = []
+        tasks = currUserTasks.Item.taskIDs;
+        tasks.splice(tasks.indexOf(eventID), 1);
+        
+        await docClient.send(new UpdateCommand({
+            TableName: 'userTasks',
+            Key: {
+                'userID': userAttributes.sub
+            },
+            UpdateExpression: "set taskIDs = :taskIDs",
+            ExpressionAttributeValues: {
+                ":taskIDs": tasks,
+            },
+        })).catch((error) => { console.log(error); return false; });
     }
 }
 

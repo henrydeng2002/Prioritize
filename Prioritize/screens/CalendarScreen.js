@@ -3,12 +3,15 @@ import { Card } from '@rneui/themed';
 import { View, Text, Button, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 export default function CalendarScreen({navigation}) {
+    
     useEffect(() => {
     }, []);
 
     const createTimeHandler = () => {
         navigation.navigate("Enter a Time Slot");
     }
+
+    
 
     return (
         <ScrollView>
@@ -29,5 +32,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'space-around',
+    },
+    button: {
+        margin: 0,
+        height: 20,
+        backgroundColor: 'blue',
     },
 });

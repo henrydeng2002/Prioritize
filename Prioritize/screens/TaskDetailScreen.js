@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import {Text, StyleSheet, View, TextInput, Button, SafeAreaView} from 'react-native';
+import {Text, StyleSheet, View, TextInput, Button, SafeAreaView, Alert } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import React, {useState} from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -62,6 +62,21 @@ export default function TaskDetailScreen({route, navigation}) {
         }
     }
 
+    const moreTime = () => {
+        Alert.alert('More Time', 'Please edit time needed to complete task', [
+            { text: 'OK' }
+        ]);
+    }
+
+    const finishedHandler = () => {
+        Alert.alert('Are you sure?', 'Press Yes to finish this task and remove it from pending tasks', [
+            { text: 'Cancel' },
+            { text: 'Yes',
+                onPress: async () => {await AWSHelper.removeEvent(route.params.task.eventID); navigation.navigate("Task Overview")}
+            }
+        ]);
+    }
+
     return (
         <View>
             <Text style={styles.header}>Task Details:</Text>
@@ -108,6 +123,9 @@ export default function TaskDetailScreen({route, navigation}) {
                 </View>
             }
             {(value == null) ? <Text></Text> :<Button style={styles.button} onPress={updateEvent} title="Confirm" />}
+            {(route.params.task.timeNeeded == 0) ?
+            <Button style={styles.button} onPress={moreTime} title="Need more time?"/>
+            : <Button style={styles.button} onPress={finishedHandler} title="Finished?" />}
         </View>
     )
 }
