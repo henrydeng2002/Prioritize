@@ -97,7 +97,8 @@ export default function TaskCreationScreen({ navigation }) {
         ]);
 
     return (
-        <ScrollView>
+        <ScrollView style={styles.container}>
+            <View style={styles.viewContainer}>
             <Text style={styles.header}>Create a Task</Text>
             {/* </View>
         <View> */}
@@ -116,16 +117,20 @@ export default function TaskCreationScreen({ navigation }) {
                 onChangeText={(text) => setNewCategory(text)}
             />
             <Button
-                style={styles.button}
+                style={styles.buttonStyle}
                 title="Create"
                 onPress={createCategory}
             />
+            </View>
+            <View style={styles.viewContainer}>
             <Text style={styles.subheader}>Task name</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Enter a name"
                 onChangeText={(text) => setName(text)}
             />
+            </View>
+            <View style={styles.viewContainer}>
             <Text style={styles.subheader}>Due on:</Text>
             <SafeAreaView>
                 <Button onPress={showDatepicker} title="Date" />
@@ -144,25 +149,41 @@ export default function TaskCreationScreen({ navigation }) {
                 <Text>Date & Time selected: {date.toLocaleString()}</Text>
             </SafeAreaView>
             <Text></Text>
+            </View>
+            <View style={styles.viewContainer}>
             <Text style={styles.subheader}>Time needed to complete task:</Text>
             <TimePicker value={time} onChange={handleTimeNeededChange} minutesInterval={15} hoursUnit='hrs' minutesUnit='mins' />
             <Text></Text>
+            </View>
+            <View style={styles.viewContainer}>
             <Text style={styles.subheader}>Description:</Text>
             <TextInput
                 style={styles.description}
                 placeholder="Description (optional)"
                 onChangeText={(text) => setDescription(text)}
             />
+            </View>
             <Button
                 title="Confirm"
-                style={styles.button}
+                style={styles.buttonStyle}
                 onPress={createEvent}
             />
+            <Text></Text>
+            <Text></Text>
+            <Text></Text>
         </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
+    container: {
+        padding: 15
+    },
+    viewContainer: {
+        borderColor: 'black',
+        borderWidth: 1,
+        padding: 10
+    },
     header: {
         fontSize: 20,
         alignSelf: 'center'
@@ -180,9 +201,10 @@ const styles = StyleSheet.create({
         width: '100%',
         alignSelf: 'center'
     },
-    button: {
+    buttonStyle: {
         margin: 0,
         height: 20,
+        marginBottom: 20,
         backgroundColor: 'blue',
     },
     picker: {

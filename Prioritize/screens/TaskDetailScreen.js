@@ -82,12 +82,15 @@ export default function TaskDetailScreen({route, navigation}) {
     return (
         <View>
             <Text style={styles.header}>Task Details:</Text>
-            <Text>Title: {route.params.task.title}</Text>
-            <Text>Category: {route.params.task.category}</Text>
-            <Text>Due on: {route.params.task.dateTimeString}</Text>
-            <Text>Time needed: {route.params.task.timeNeededString}</Text>
-            <Text>Description: {route.params.task.description}</Text>
+            <View style={styles.container}>
+                <Text>Title: {route.params.task.title}</Text>
+                <Text>Category: {route.params.task.category}</Text>
+                <Text>Due on: {route.params.task.dateTimeString}</Text>
+                <Text>Time needed: {route.params.task.timeNeededString}</Text>
+                <Text>Description: {route.params.task.description}</Text>
+            </View>
             <Text></Text>
+            <View style={styles.container}>
             <Text style={styles.header}>Edit Task</Text>
             <DropDownPicker
                 open={open}
@@ -127,6 +130,7 @@ export default function TaskDetailScreen({route, navigation}) {
             {(value == null) ? <Text></Text> :<Button style={styles.button} onPress={updateEvent} title="Confirm" />}
             <Button style={styles.button} onPress={moreTime} title="Need more time?"/>
             <Button style={styles.button} onPress={finishedHandler} title="Finished?" />
+            </View>
         </View>
     )
 }
@@ -139,6 +143,9 @@ const styles = StyleSheet.create({
     subheader: {
         fontSize: 16,
         alignSelf: 'center'
+    },
+    container: {
+        padding: 15
     },
     input: {
         borderWidth: 1,
