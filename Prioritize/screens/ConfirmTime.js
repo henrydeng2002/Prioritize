@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Button, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import AWSHelper from '../resources/AWSHelper';
 import { Card } from '@rneui/themed';
 
@@ -38,9 +38,13 @@ export default function ConfirmTime({route, navigation}) {
         console.log(t.finalchoice)
     }
 
-    const accept = () => {
+    const accept = async () => {
         console.log("accept suggestions")
-        navigation.navigate("CalendarScreen")
+        await AWSHelper.acceptSuggestions(tasks);
+        Alert.alert('Accepted Suggestions', 'Please remember to finish the task in the tasks screen, or to add more time', [
+            { text: 'OK', onPress: () => {navigation.navigate("CalendarScreen")}}
+        ]);
+        
     }
 
     const reject = () => {
@@ -69,8 +73,13 @@ export default function ConfirmTime({route, navigation}) {
                     //</Pressable>
                 )
             })}
+
+        {(tasks == null || tasks.length == 0) ? <Button style={styles.button} onPress={() =>{ navigation.navigate("CalendarScreen")}} title="Back" />:
+        <View>
             <Button style={styles.button} onPress={accept} title="Accept Suggestions"/>
             <Button style={styles.button} onPress={reject} title="Reject Suggestions"/>
+        </View>
+        }
         </ScrollView>
     )
 }

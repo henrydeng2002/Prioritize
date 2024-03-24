@@ -125,9 +125,8 @@ export default function TaskDetailScreen({route, navigation}) {
                 </View>
             }
             {(value == null) ? <Text></Text> :<Button style={styles.button} onPress={updateEvent} title="Confirm" />}
-            {(route.params.task.timeNeeded == 0) ?
             <Button style={styles.button} onPress={moreTime} title="Need more time?"/>
-            : <Button style={styles.button} onPress={finishedHandler} title="Finished?" />}
+            <Button style={styles.button} onPress={finishedHandler} title="Finished?" />
         </View>
     )
 }

@@ -448,6 +448,165 @@ const AWSHelper = {
         }));
 
         return tasks.Item;
+    },
+
+    acceptSuggestions: async function(items) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        console.log(items.finalchoice)
+
+        await docClient.send(new PutCommand({
+            TableName: "currentAcceptedSuggestion",
+            Item: {
+                userID: userAttributes.sub,
+                startTime: items.startTime
+            }
+        }))
+
+        for (var i = 0; i < items.finalchoice.length; i++) {
+            var response = await docClient.send(new GetCommand({
+                TableName: 'tasks',
+                Key: {
+                    userID: userAttributes.sub,
+                    eventID: items.finalchoice[i].eventID
+                }
+            }))
+
+            response = response.Item;
+            var timeNeeded = response.timeNeeded;
+            var timeRemaining=0;
+            if (parseInt(timeNeeded) > parseInt(items.finalchoice[i].times)) {
+                timeRemaining = parseInt(timeNeeded) - parseInt(items.finalchoice[i].times);
+            }
+
+            await docClient.send(new UpdateCommand({
+                TableName: "tasks",
+                Key: {
+                    'userID': userAttributes.sub,
+                    'eventID': items.finalchoice[i].eventID,
+                },
+                UpdateExpression: "set timeNeeded = :timeNeeded",
+                ExpressionAttributeValues: {
+                    ":timeNeeded": timeRemaining,
+                },
+            }))
+        }
+    },
+
+    getAcceptedSuggestions: async function() {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var response = await docClient.send(new GetCommand({
+            TableName: "currentAcceptedSuggestion",
+            Key: {
+                userID: userAttributes.sub
+            }
+        }))
+
+        var t = await this.getSuggestions(response.Item.startTime);
+        return t;
+    },
+
+    getTimeNeeded: async function() {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var times = await docClient.send(new GetCommand({
+            TableName: 'userMetadata',
+            Key: {
+                'userID': userAttributes.sub,
+            }
+        }));
+
+        var daysString = "";
+        var hr = (parseInt(times.Item.nextThreeDays) - (parseInt(times.Item.nextThreeDays) % 4)) / 4
+        var min = (parseInt(times.Item.nextThreeDays) % 4) * 15
+        daysString += hr + " hrs " + min + " mins";
+
+        var weekString = "";
+        var hr = (parseInt(times.Item.nextWeek) - (parseInt(times.Item.nextWeek) % 4)) / 4
+        var min = (parseInt(times.Item.nextWeek) % 4) * 15
+        weekString += hr + " hrs " + min + " mins";
+
+        var t = {
+            'days': daysString,
+            'week': weekString
+        }
+
+        return t;
+    },
+
+    addTimeSlot: async function(time, eventID) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var timeAllocated = 0;
+        timeAllocated += (parseInt(time.hours) * 4);
+        timeAllocated += (parseInt(time.minutes) / 15);
+
+        var date = (new Date()).toISOString();
+
+        docClient.send(new PutCommand({
+            TableName: 'processedTimeSlot',
+            Item: {
+                userID: userAttributes.sub,
+                startTime: date,
+                eventsRemoved: [],
+                finalchoice: [{
+                    eventID: eventID,
+                    times: timeAllocated
+                }]
+            }
+        }))
+
+        docClient.send(new PutCommand({
+            TableName: 'currentAcceptedSuggestion',
+            Item: {
+                userID: userAttributes.sub,
+                startTime: date
+            }
+        }))
+
+        var response = await docClient.send(new GetCommand({
+            TableName: 'tasks',
+            Key: {
+                userID: userAttributes.sub,
+                eventID: eventID
+            }
+        }))
+
+        response = response.Item;
+        var timeNeeded = response.timeNeeded;
+        var timeRemaining=0;
+        if (parseInt(timeNeeded) > parseInt(time)) {
+            timeRemaining = parseInt(timeNeeded) - parseInt(time);
+        }
+
+        await docClient.send(new UpdateCommand({
+            TableName: "tasks",
+            Key: {
+                'userID': userAttributes.sub,
+                'eventID': eventID,
+            },
+            UpdateExpression: "set timeNeeded = :timeNeeded",
+            ExpressionAttributeValues: {
+                ":timeNeeded": timeRemaining,
+            },
+        }))
     }
 }
 
