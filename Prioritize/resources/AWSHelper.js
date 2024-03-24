@@ -390,6 +390,64 @@ const AWSHelper = {
                 ":taskIDs": tasks,
             },
         })).catch((error) => { console.log(error); return false; });
+    },
+
+    createTimeSlot: async function(timeBegin, duration, categories) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var timeAllocated = 0;
+        timeAllocated += (parseInt(duration.hours) * 4);
+        timeAllocated += (parseInt(duration.minutes) / 15);
+        var timeString = timeBegin.toISOString();
+
+        docClient.send(new PutCommand({
+            TableName: "timeSlots",
+            Item: {
+                'userID': userAttributes.sub,
+                'startTime': timeString,
+                'duration': timeAllocated,
+                'categories': categories
+            }
+        }))
+    },
+
+    getSuggestions: async function(date) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var tasks = await docClient.send(new GetCommand({
+            TableName: 'processedTimeSlot',
+            Key: {
+                'userID': userAttributes.sub,
+                'startTime': date
+            }
+        }));
+        return tasks.Item;
+    },
+
+    getTask: async function(eventID) {
+        const dynamoDBClient = new DynamoDBClient({
+            region: options.dynamoDBRegion,
+            credentials: credentials
+        })
+        const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+
+        var tasks = await docClient.send(new GetCommand({
+            TableName: 'tasks',
+            Key: {
+                'userID': userAttributes.sub,
+                'eventID': eventID
+            }
+        }));
+
+        return tasks.Item;
     }
 }
 

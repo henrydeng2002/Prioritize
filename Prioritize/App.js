@@ -14,6 +14,8 @@ import TaskCreationScreen from './screens/TaskCreationScreen';
 
 import React from "react";
 import CreateTime from './screens/CreateTime';
+import ConfirmTime from './screens/ConfirmTime';
+import RejectScreen from './screens/RejectScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -88,6 +90,24 @@ function Calendar() {
       <Stack.Screen
         name = "Enter a Time Slot"
         component={CreateTime}
+      />
+      <Stack.Screen
+        name = "Confirm tasks"
+        component={ConfirmTime}
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+          headerLeft: () => <></>,
+        }}
+      />
+      <Stack.Screen
+        name = "Reject suggestions"
+        component={RejectScreen}
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+          headerLeft: () => <></>,
+        }}
       />
     </Stack.Navigator>
   )

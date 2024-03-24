@@ -56,9 +56,11 @@ export default function TaskDetailScreen({route, navigation}) {
             } else {
                 var dateString = date.toISOString();
                 AWSHelper.updateDue(route.params.task.eventID, dateString);
+                navigation.navigate("Task Overview");
             }
         } else if (value == 'time') {
             AWSHelper.updateTimeNeeded(route.params.task.eventID, time);
+            navigation.navigate("Task Overview");
         }
     }
 

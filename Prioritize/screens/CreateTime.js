@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Text, SafeAreaView, StyleSheet, Button } from 'react-native';
+import { Text, SafeAreaView, StyleSheet, Button, Alert } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AWSHelper from '../resources/AWSHelper';
 import { TimePicker, ValueMap } from 'react-native-simple-time-picker';
@@ -41,8 +41,19 @@ export default function CreateTime({navigation}) {
     }
 
     const confirmTime = () => {
-        console.log(value)
-        console.log(time)
+        if (time.hours == 0 && time.minutes == 0) {
+            Alert.alert('Error', 'Insufficient time', [
+                { text: 'OK' }
+            ]);
+        } else if (value == null || value.length == 0) {
+            Alert.alert('Error', 'Please choose at least one category', [
+                { text: 'OK' }
+            ]);
+        } else {
+            var date = new Date()
+            AWSHelper.createTimeSlot(date, time, value);
+            navigation.navigate("Confirm tasks", {date: date.toISOString()});
+        }
     }
 
     return (
@@ -57,6 +68,7 @@ export default function CreateTime({navigation}) {
                 setOpen={setOpen}
                 setValue={setValue}
                 setItems={setItems}
+                multiple={true}
                 placeholder={'Choose a category.'}
             />
             <Button style={styles.button} title="Confirm" onPress={confirmTime}/>
