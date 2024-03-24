@@ -98,10 +98,11 @@ export default function TaskCreationScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.container}>
-            <View style={styles.viewContainer}>
+            
             <Text style={styles.header}>Create a Task</Text>
-            {/* </View>
-        <View> */}
+            <View style={styles.viewContainer}>
+                <Text style={styles.subheader}>Choose a category:</Text>
+        
             <DropDownPicker
                 open={open}
                 value={value}
@@ -110,6 +111,7 @@ export default function TaskCreationScreen({ navigation }) {
                 setValue={setValue}
                 setItems={setItems}
                 placeholder={'Choose a category.'}
+                maxHeight={100}
             />
             <TextInput
                 style={styles.input}
@@ -170,7 +172,7 @@ export default function TaskCreationScreen({ navigation }) {
             />
             <Text></Text>
             <Text></Text>
-            <Text></Text>
+            <Text style={styles.bottom}></Text>
         </ScrollView>
     )
 }
@@ -178,6 +180,9 @@ export default function TaskCreationScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         padding: 15
+    },
+    bottom: {
+        paddingBottom: 300,
     },
     viewContainer: {
         borderColor: 'black',

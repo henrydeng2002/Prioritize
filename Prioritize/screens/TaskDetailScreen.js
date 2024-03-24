@@ -68,6 +68,7 @@ export default function TaskDetailScreen({route, navigation}) {
         Alert.alert('More Time', 'Please edit time needed to complete task', [
             { text: 'OK' }
         ]);
+        setValue('time');
     }
 
     const finishedHandler = () => {

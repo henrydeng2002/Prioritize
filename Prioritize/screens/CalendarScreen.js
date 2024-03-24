@@ -78,7 +78,7 @@ export default function CalendarScreen({navigation}) {
             <Text></Text>}
 
             {(tasks == null || tasks.length == 0) ?
-            <Text>You have no tasks to complete</Text>:
+            <Text style={styles.subheader}>You have no tasks to complete</Text>:
             tasks.finalchoice.map((task) => {
                 return (
                     //<Pressable onPress={() => {onTaskSelect(task)}} key={task.eventID}>
@@ -112,4 +112,9 @@ const styles = StyleSheet.create({
         height: 20,
         backgroundColor: 'blue',
     },
+    subheader: {
+        fontSize: 16,
+        alignSelf: 'center',
+        padding: 10
+    }
 });

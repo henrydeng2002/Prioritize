@@ -49,10 +49,14 @@ export default function TaskOverviewScreen({route, navigation}) {
                             <Card.Title key={task.title}>
                                 {task.title}
                             </Card.Title>
+                            <Text>Category: {task.category}</Text>
+                            <Text></Text>
                             <Text>Time needed:</Text>
                             <Text key={task.timeNeededString}>{task.timeNeededString}</Text>
+                            <Text></Text>
                             <Text>Date due:</Text>
                             <Text>{task.dateTimeString}</Text>
+                            <Text></Text>
                             <Text>
                                 {(task.description != "") ? "Description: " + task.description : ""}
                             </Text>
